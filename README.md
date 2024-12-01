@@ -14,3 +14,32 @@ AOC_SESSION = <your unique session cookie>
 ```
 
 How to get your unique session cookie? [Click here](https://github.com/wimglenn/advent-of-code-wim/issues/1)
+
+# Times (Average of 1000 runs)
+
+| Day | Part 1 (s) | Part 2 (s) |
+| --- | ------ | ------ |
+| 1   | 0.000108      | 0.000197      |
+| 2   | -      | -      |
+| 3   | -      | -      |
+| 4   | -      | -      |
+| 5   | -      | -      |
+| 7   | -      | -      |
+| 8   | -      | -      |
+| 9   | -      | -      |
+| 10  | -      | -      |
+| 11  | -      | -      |
+| 12  | -      | -      |
+| 13  | -      | -      |
+| 14  | -      | -      |
+| 15  | -      | -      |
+| 16  | -      | -      |
+| 17  | -      | -      |
+| 18  | -      | -      |
+| 19  | -      | -      |
+| 20  | -      | -      |
+| 21  | -      | -      |
+| 22  | -      | -      |
+| 23  | -      | -      |
+| 24  | -      | -      |
+| 25  | -      | -      |

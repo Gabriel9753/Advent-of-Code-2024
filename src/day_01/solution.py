@@ -22,22 +22,43 @@ cur_day = int(cur_day[0]) if len(cur_day) > 0 else datetime.today().day
 images_path = os.path.join(par_dir, "images")
 
 
+def split_in_two_list(day_input):
+    # iter for all elements in the list and find the first and second number (with re) (convert to int)
+    first = [int(re.findall(r"\d+", i)[0]) for i in day_input]
+    second = [int(re.findall(r"\d+", i)[1]) for i in day_input]
+    return first, second
+
+
 @timer(return_time=True)
 def task1(day_input):
     # Day-specific code for Task 1
-    pass
+    left, right = day_input
+    left.sort()
+    right.sort()
+
+    return sum(np.abs(np.array(left) - np.array(right)))
 
 
 @timer(return_time=True)
 def task2(day_input):
     # Day-specific code for Task 2
-    pass
+    left, right = day_input
+
+    # count all unique elements in the left and right list
+    left_count = Counter(left)
+    right_count = Counter(right)
+
+    result = sum([count * num * right_count[num] for num, count in left_count.items()])
+
+    return result
 
 
 def main():
     # Choose between the real input or the example input
-    # day_input = load_input(os.path.join(cur_dir, "input.txt"))
-    day_input = load_input(os.path.join(cur_dir, "example_input.txt"))
+    day_input = load_input(os.path.join(cur_dir, "input.txt"))
+    # day_input = load_input(os.path.join(cur_dir, "example_input.txt"))
+
+    day_input = split_in_two_list(day_input.split("\n"))
 
     # Call the tasks and store their results (if needed)
     result_task1, time_task1 = task1(day_input)
@@ -60,7 +81,6 @@ def main():
     print("\nAverage times:")
     print(f"Task 1: {avg_time_task1:.6f} seconds")
     print(f"Task 2: {avg_time_task2:.6f} seconds")
-
 
 
 if __name__ == "__main__":

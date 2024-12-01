@@ -38,3 +38,10 @@ def load_input(input_file_path):
     except Exception as e:
         print(f"Error loading input {input_file_path}: {e}")
         sys.exit(1)
+
+def average_time(runs, func, *args, **kwargs):
+    total_time = 0
+    for _ in range(runs):
+        _, time = func(*args, **kwargs)
+        total_time += time
+    return total_time / runs
