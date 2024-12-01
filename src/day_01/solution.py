@@ -14,7 +14,7 @@ cur_dir = os.path.dirname(os.path.abspath(__file__))
 par_dir = os.path.dirname(cur_dir)
 sys.path.append(par_dir)
 
-from util.general_util import average_time, load_input, timer
+from util.general_util import average_time, load_input, timer, write_times_to_readme
 
 last_dir = str(os.path.basename(os.path.normpath(cur_dir)))
 cur_day = re.findall(r"\d+", last_dir)
@@ -81,6 +81,7 @@ def main():
     print("\nAverage times:")
     print(f"Task 1: {avg_time_task1:.6f} seconds")
     print(f"Task 2: {avg_time_task2:.6f} seconds")
+    write_times_to_readme(cur_day, avg_time_task1, avg_time_task2)
 
 
 if __name__ == "__main__":

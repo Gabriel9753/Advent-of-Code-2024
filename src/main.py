@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import sys
 from argparse import ArgumentParser
@@ -29,9 +30,7 @@ if not AOC_SESSION:
         "Please add your session cookie to .env file if you want to download input.",
         Fore.RED,
     )
-    print_color(
-        "Else only the dir structure and python script will be created!", Fore.RED
-    )
+    print_color("Else only the dir structure and python script will be created!", Fore.RED)
 else:
     print_color(
         "AOC_SESSION found in .env file. Input will be downloaded if available.",
@@ -80,7 +79,28 @@ def fetch_input(folder_path, day, year):
     with open(example_input_file_path, "w", encoding="utf-8") as example_input_file:
         example_input_file.write(example_input_data)
 
-    return ret_code
+    return ret_code, input_file_path, example_input_file_path
+
+
+def try_get_example_input(md_path, example_input_file_path):
+    if not os.path.exists(example_input_file_path):
+        print_color("Example input file not found. Skipping...", Fore.YELLOW)
+        return
+
+    if not os.path.exists(md_path):
+        print_color("Markdown file not found. Skipping...", Fore.YELLOW)
+        return
+
+    with open(md_path, "r") as md_file:
+        md_content = md_file.read()
+        code_blocks = re.findall(r"```(.*?)```", md_content, re.DOTALL)
+        if len(code_blocks) > 0:
+            example_input = code_blocks[0].strip()
+            with open(example_input_file_path, "w") as example_input_file:
+                example_input_file.write(example_input)
+            print_color("Example input fetched from markdown file.", Fore.GREEN)
+        else:
+            print_color("No code blocks found in markdown file. Skipping...", Fore.YELLOW)
 
 
 def get_exercise_description(current_day, year):
@@ -122,12 +142,14 @@ def create_markdown(day, description):
         markdown_file.write(markdown_text)
     print_color(f"Markdown file for Day {day} created.", Fore.GREEN)
 
+    return markdown_path
+
 
 def main(current_day, year):
     if 1 <= current_day <= 25:
         print_color(f"Creating files for Day {current_day}...", Fore.CYAN)
         folder_path = create_day_folder(current_day)
-        ret_code = fetch_input(folder_path, current_day, year)
+        ret_code, _, example_input_file_path = fetch_input(folder_path, current_day, year)
 
         template_path = "template.py"
         template_path = os.path.join(cur_dir, template_path)
@@ -141,7 +163,8 @@ def main(current_day, year):
             sys.exit(ret_code)
 
         exercise_description = get_exercise_description(current_day, year)
-        create_markdown(current_day, exercise_description)
+        md_path = create_markdown(current_day, exercise_description)
+        try_get_example_input(md_path, example_input_file_path)
     else:
         print_color(f"Day {current_day} is not valid for AOC {year}!", Fore.RED)
 

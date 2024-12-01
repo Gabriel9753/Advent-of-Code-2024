@@ -1,5 +1,12 @@
+import os
+import re
 import sys
 import time
+
+cur_dir = os.path.dirname(os.path.abspath(__file__))
+# full path to the parent directory
+readme_dir = os.path.dirname(os.path.dirname(cur_dir))
+README_PATH = os.path.join(readme_dir, "README.md")
 
 
 # Timer decorator to measure the execution time of a function
@@ -39,9 +46,38 @@ def load_input(input_file_path):
         print(f"Error loading input {input_file_path}: {e}")
         sys.exit(1)
 
+
 def average_time(runs, func, *args, **kwargs):
     total_time = 0
     for _ in range(runs):
         _, time = func(*args, **kwargs)
         total_time += time
     return total_time / runs
+
+
+def write_times_to_readme(day, time_task1, time_task2):
+    if not os.path.exists(README_PATH):
+        print(f"Error: README file not found ({README_PATH})")
+        sys.exit(1)
+
+    with open(README_PATH, "r") as file:
+        lines = file.readlines()
+
+    updated = False
+    for i, line in enumerate(lines):
+        # Match the line corresponding to the specific day in the table
+        match = re.match(rf"^\| {day} +\| +([\d.-]+|-) +\| +([\d.-]+|-) +\|$", line)
+        if match:
+            # Replace the old times with the new ones
+            lines[i] = f"| {day}   | {time_task1:.6f}      | {time_task2:.6f}      |\n"
+            updated = True
+            break
+
+    if not updated:
+        print(f"Error: Day {day} not found in the table.")
+        sys.exit(1)
+
+    with open(README_PATH, "w") as file:
+        file.writelines(lines)
+
+    print(f"Times for Day {day} updated successfully.")
