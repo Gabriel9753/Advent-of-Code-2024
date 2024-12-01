@@ -1,10 +1,7 @@
 # aoc
 input.txt
 example_input.txt
-<<<<<<< HEAD
 description.md
-=======
->>>>>>> 197eef934c48bc6b4765a5d75f012f4c69892233
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
