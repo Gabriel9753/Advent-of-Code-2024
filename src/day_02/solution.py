@@ -52,8 +52,9 @@ def task1(day_input):
 
 @timer(return_time=True)
 def task2(day_input):
-    copy_day_input = deepcopy(day_input)
     safe_rows = list(range(len(day_input)))
+    unsafe_cases_per_row = defaultdict(int)
+
     # first or last error could be the one problem we can remove
     # so, we have to check more values than just the first and last for increasing bool
     increasing_rows = []
@@ -67,7 +68,6 @@ def task2(day_input):
     for r, row in enumerate(day_input):
         is_safe = True
         is_increasing = increasing_rows[r]
-        rm_problems = 0
 
         for i, num in enumerate(row):
             if i == 0:
@@ -76,18 +76,16 @@ def task2(day_input):
             diff = abs(v1 - v0)
             is_safe = is_safe_diff(diff) and is_in_order(is_increasing, v0, v1)
 
-            if not is_safe and rm_problems == 0:
-                rm_problems += 1
-                row[i] = v0
-                # mark in copy_day_input that we have changed the value with a -inf
-                copy_day_input[r][i] = -math.inf
-                continue
-
             if not is_safe:
-                safe_rows.remove(r)
-                break
+                unsafe_cases_per_row[r] += 1
 
-    print(copy_day_input)
+    # remove the rows with more than 1 unsafe case
+    for row, unsafe_cases in unsafe_cases_per_row.items():
+        if unsafe_cases > 1:
+            safe_rows.remove(row)
+
+    print(unsafe_cases_per_row)
+
     return len(safe_rows)
 
 
