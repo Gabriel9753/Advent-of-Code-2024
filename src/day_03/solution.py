@@ -22,57 +22,40 @@ cur_day = re.findall(r"\d+", last_dir)
 cur_day = int(cur_day[0]) if len(cur_day) > 0 else datetime.today().day
 images_path = os.path.join(par_dir, "images")
 
+PATTERN = re.compile(r"mul\((\d{1,3}),(\d{1,3})\)")
+
 
 @timer(return_time=True)
 def task1(day_input):
-    # find all mul(d,d) in day_input, where d can be 1-3 digits
-    pattern = re.compile(r"mul\((\d{1,3}),(\d{1,3})\)")
-    matches = pattern.findall(day_input)
-
-    res = sum([int(a) * int(b) for a, b in matches])
-
-    return res
-
-
-
+    return sum([int(a) * int(b) for a, b in PATTERN.findall(day_input)])
 
 
 @timer(return_time=True)
 def task2(day_input):
-    indexes_mul = [(m.start(), m.end()) for m in re.finditer(r"mul\((\d{1,3}),(\d{1,3})\)", day_input)]
-
-    # get all indexes of do() and don't()
-    indexes_do = [("y", m.start()) for m in re.finditer(r'do\(\)', day_input)]
+    pattern = re.compile(PATTERN)
+    indexes_mul = [("m", m.start(), m.end()) for m in re.finditer(PATTERN, day_input)]
+    indexes_do = [("y", m.start()) for m in re.finditer(r"do\(\)", day_input)]
     indexes_dont = [("n", m.start()) for m in re.finditer("don't\(\)", day_input)]
-
-    # valid indexes are 0 - index(don't()) and index(do()) - index(don't()) and index(do()) - end of string
-    valid_indexes = [(0, indexes_dont[0][1])]
-
-    all_indexes = indexes_do + indexes_dont
-    # sort all indexes by their position
+    all_indexes = indexes_do + indexes_dont + indexes_mul
     all_indexes.sort(key=lambda x: x[1])
 
-    last_start = valid_indexes[-1][0]
-    last_end = valid_indexes[-1][1]
-    for i in range(1, len(all_indexes)):
-        last_end = valid_indexes[-1][1]
-
-        if all_indexes[i][0] == "y" and all_indexes[i][1] > last_end:
-            last_start = all_indexes[i][1]
-
-    mul = lambda x, y: x * y
-
-    # call mul for all found mul(d,d) in day_input after do() and before don't()
+    # mul if state is 1. Switch state to 0 if dont is found. Switch state to 1 if do is found
+    state = 1
     res = 0
-    for i, (start, end) in enumerate(indexes_mul):
-        pass
 
+    for i in all_indexes:
+        if i[0] == "m" and state == 1:
+            mul_nums = pattern.findall(day_input[i[1] : i[2]])
+            res += int(mul_nums[0][0]) * int(mul_nums[0][1])
+        state = 1 if i[0] == "y" else 0 if i[0] == "n" else state
+
+    return res
 
 
 def main():
     # Choose between the real input or the example input
-    # day_input = load_input(os.path.join(cur_dir, "input.txt"))
-    day_input = load_input(os.path.join(cur_dir, "example_input.txt"))
+    day_input = load_input(os.path.join(cur_dir, "input.txt"))
+    # day_input = load_input(os.path.join(cur_dir, "example_input.txt"))
 
     # Call the tasks and store their results (if needed)
     result_task1, time_task1 = task1(day_input)
@@ -90,12 +73,12 @@ def main():
     print(f"Task 2: {time_task2:.6f} seconds")
 
     # 100 times and average the time
-    # avg_time_task1 = average_time(100, task1, day_input)
-    # avg_time_task2 = average_time(100, task2, day_input)
-    # print("\nAverage times:")
-    # print(f"Task 1: {avg_time_task1:.6f} seconds")
-    # print(f"Task 2: {avg_time_task2:.6f} seconds")
-    # write_times_to_readme(cur_day, avg_time_task1, avg_time_task2)
+    avg_time_task1 = average_time(100, task1, day_input)
+    avg_time_task2 = average_time(100, task2, day_input)
+    print("\nAverage times:")
+    print(f"Task 1: {avg_time_task1:.6f} seconds")
+    print(f"Task 2: {avg_time_task2:.6f} seconds")
+    write_times_to_readme(cur_day, avg_time_task1, avg_time_task2)
 
 
 if __name__ == "__main__":
