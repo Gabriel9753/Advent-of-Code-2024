@@ -55,12 +55,12 @@ def main():
     print(f"Task 2: {time_task2:.6f} seconds")
 
     # 100 times and average the time
-    avg_time_task1 = average_time(100, task1, day_input)
-    avg_time_task2 = average_time(100, task2, day_input)
-    print("\nAverage times:")
-    print(f"Task 1: {avg_time_task1:.6f} seconds")
-    print(f"Task 2: {avg_time_task2:.6f} seconds")
-    write_times_to_readme(cur_day, avg_time_task1, avg_time_task2)
+    # avg_time_task1 = average_time(100, task1, day_input)
+    # avg_time_task2 = average_time(100, task2, day_input)
+    # print("\nAverage times:")
+    # print(f"Task 1: {avg_time_task1:.6f} seconds")
+    # print(f"Task 2: {avg_time_task2:.6f} seconds")
+    # write_times_to_readme(cur_day, avg_time_task1, avg_time_task2)
 
 
 if __name__ == "__main__":
