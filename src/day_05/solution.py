@@ -21,25 +21,45 @@ cur_day = re.findall(r"\d+", last_dir)
 cur_day = int(cur_day[0]) if len(cur_day) > 0 else datetime.today().day
 images_path = os.path.join(par_dir, "images")
 
+class uid_generator:
+    def __init__(self):
+        self.uid = 0
+        self._map = {}
+
+    def get_uid(self, v):
+        v = int(v)
+        if v in self._map:
+            return self._map[v]
+        self._map[v] = self.uid
+        self.uid += 1
+        return self._map[v]
 
 @timer(return_time=True)
 def task1(day_input):
     day_input = day_input.split("\n\n")
-    costs = defaultdict(lambda: -1)
     rules = day_input[0].split("\n")
-    prints = day_input[1].split("\n")
-
-    cur_cost = 0
+    uid_gen = uid_generator()
+    nodes = {uid_gen.get_uid(rule.split("|")[0]): rule.split("|")[0] for rule in rules}
+    nodes.update({uid_gen.get_uid(rule.split("|")[1]): rule.split("|")[1] for rule in rules})
+    index_map = uid_gen._map
+    print(index_map)
+    graph = np.zeros((len(nodes), len(nodes)))
 
     for rule in rules:
         rule = rule.split("|")
-        rule = [int(x) for x in rule]
+        f, s = int(rule[0]), int(rule[1])
 
-        # cost for rule[1] must be higher than rule[0]
-        if rule[1] > rule[0]:
-            costs[rule[1]] = rule[0]
+        graph[index_map[f], index_map[s]] = 1
 
-    print(costs)
+    prints = day_input[1].split("\n")
+
+    correct_ones = 0
+    for order in prints:
+        order = order.split(",")
+        is_correct = False
+        for i in range(len(order) - 1):
+            f, s = index_map[int(order[i])], index_map[int(order[i + 1])]
+
 
 
 @timer(return_time=True)
