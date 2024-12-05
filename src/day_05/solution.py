@@ -21,57 +21,74 @@ cur_day = re.findall(r"\d+", last_dir)
 cur_day = int(cur_day[0]) if len(cur_day) > 0 else datetime.today().day
 images_path = os.path.join(par_dir, "images")
 
-class uid_generator:
-    def __init__(self):
-        self.uid = 0
-        self._map = {}
 
-    def get_uid(self, v):
-        v = int(v)
-        if v in self._map:
-            return self._map[v]
-        self._map[v] = self.uid
-        self.uid += 1
-        return self._map[v]
+def is_update_valid(update, graph_combinations):
+    # which value is where?
+    position = {p: pos for pos, p in enumerate(update)}
+
+    # check all the rules if they are valid for the given update based on the position
+    for f, t in graph_combinations:
+        if f in position and t in position:
+            # based on graph, f should be before t
+            if position[f] >= position[t]:
+                return False
+    return True
+
 
 @timer(return_time=True)
 def task1(day_input):
-    day_input = day_input.split("\n\n")
-    rules = day_input[0].split("\n")
-    uid_gen = uid_generator()
-    nodes = {uid_gen.get_uid(rule.split("|")[0]): rule.split("|")[0] for rule in rules}
-    nodes.update({uid_gen.get_uid(rule.split("|")[1]): rule.split("|")[1] for rule in rules})
-    index_map = uid_gen._map
-    print(index_map)
-    graph = np.zeros((len(nodes), len(nodes)))
+    rules, updates = day_input.strip().split("\n\n")
+    rules = [tuple(map(int, rule.split("|"))) for rule in rules.split("\n")]
+    updates = [list(map(int, update.split(","))) for update in updates.split("\n")]
 
-    for rule in rules:
-        rule = rule.split("|")
-        f, s = int(rule[0]), int(rule[1])
+    graph = defaultdict(list)
+    for f, t in rules:
+        graph[f].append(t)
+    graph_combinations = [(f, t) for f in graph for t in graph[f]]
 
-        graph[index_map[f], index_map[s]] = 1
+    return sum(update[len(update) // 2] for update in updates if is_update_valid(update, graph_combinations))
 
-    prints = day_input[1].split("\n")
 
-    correct_ones = 0
-    for order in prints:
-        order = order.split(",")
-        is_correct = False
-        for i in range(len(order) - 1):
-            f, s = index_map[int(order[i])], index_map[int(order[i + 1])]
+def reorder_update(update, graph):
+    new_ordered = []
 
+    while len(update) > 0:
+        cur_min = update[0]
+        cur_min_index = 0
+
+        for i in range(1, len(update)):
+            if cur_min in graph[update[i]]:
+                cur_min = update[i]
+                cur_min_index = i
+
+        new_ordered.append(update.pop(cur_min_index))
+    return new_ordered
 
 
 @timer(return_time=True)
 def task2(day_input):
-    # Day-specific code for Task 2
-    pass
+    rules, updates = day_input.strip().split("\n\n")
+    rules = [tuple(map(int, rule.split("|"))) for rule in rules.split("\n")]
+    updates = [list(map(int, update.split(","))) for update in updates.split("\n")]
+
+    graph = defaultdict(list)
+    for f, t in rules:
+        graph[f].append(t)
+    graph_combinations = [(f, t) for f in graph for t in graph[f]]
+
+    return sum(
+        [
+            reorder_update(update, graph)[len(update) // 2]
+            for update in updates
+            if not is_update_valid(update, graph_combinations)
+        ]
+    )
 
 
 def main():
     # Choose between the real input or the example input
-    # day_input = load_input(os.path.join(cur_dir, "input.txt"))
-    day_input = load_input(os.path.join(cur_dir, "example_input.txt"))
+    day_input = load_input(os.path.join(cur_dir, "input.txt"))
+    # day_input = load_input(os.path.join(cur_dir, "example_input.txt"))
 
     # Call the tasks and store their results (if needed)
     result_task1, time_task1 = task1(day_input)
@@ -89,12 +106,12 @@ def main():
     print(f"Task 2: {time_task2:.6f} seconds")
 
     # 100 times and average the time
-    # avg_time_task1 = average_time(100, task1, day_input)
-    # avg_time_task2 = average_time(100, task2, day_input)
-    # print("\nAverage times:")
-    # print(f"Task 1: {avg_time_task1:.6f} seconds")
-    # print(f"Task 2: {avg_time_task2:.6f} seconds")
-    # write_times_to_readme(cur_day, avg_time_task1, avg_time_task2)
+    avg_time_task1 = average_time(100, task1, day_input)
+    avg_time_task2 = average_time(100, task2, day_input)
+    print("\nAverage times:")
+    print(f"Task 1: {avg_time_task1:.6f} seconds")
+    print(f"Task 2: {avg_time_task2:.6f} seconds")
+    write_times_to_readme(cur_day, avg_time_task1, avg_time_task2)
 
 
 if __name__ == "__main__":
