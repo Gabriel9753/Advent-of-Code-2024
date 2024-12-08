@@ -26,7 +26,7 @@ How to get your unique session cookie? [Click here](https://github.com/wimglenn/
 | 5   | 0.004497      | 0.006167      |
 | 6   | 0.003124      | 9.287517      |
 | 7   | 0.056917      | 1.782864      |
-| 8   | -      | -      |
+| 8   | 0.000149      | 0.000554      |
 | 9   | -      | -      |
 | 10  | -      | -      |
 | 11  | -      | -      |
