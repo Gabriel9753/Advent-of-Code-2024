@@ -23,6 +23,7 @@ cur_day = int(cur_day[0]) if len(cur_day) > 0 else datetime.today().day
 images_path = os.path.join(par_dir, "images")
 
 
+@timer(return_time=True)
 def preprocess_input(input_data):
     # Preprocess the input data (if needed)
     return input_data.splitlines()
@@ -39,6 +40,7 @@ def task2(day_input):
     # Day-specific code for Task 2
     pass
 
+
 def main(args):
     # Choose between the real input or the example input
     if args.example:
@@ -46,12 +48,13 @@ def main(args):
     else:
         day_input = load_input(os.path.join(cur_dir, "input.txt"))
 
-    day_input = preprocess_input(day_input)
+    day_input, t = preprocess_input(day_input)
     result_task1, time_task1 = task1(day_input)
     result_task2, time_task2 = task2(day_input)
 
     print(f"\nDay {cur_day}")
     print("------------------")
+    print(f"Processing data: {t:.6f} seconds")
     print(f"Task 1: {result_task1} ({time_task1:.6f} seconds)")
     print(f"Task 2: {result_task2} ({time_task2:.6f} seconds)")
 
@@ -66,6 +69,6 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--example", action="store_true", help="Use the example input", default=True)
-    parser.add_argument("--timeit", action="store_true", help="Average the execution time over 100 runs", default=False)
+    parser.add_argument("--example", type=int, help="Use the example input", default=1)
+    parser.add_argument("--timeit", type=int, help="Average the execution time over 100 runs", default=0)
     main(parser.parse_args())
