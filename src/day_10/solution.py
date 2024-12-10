@@ -24,77 +24,50 @@ images_path = os.path.join(par_dir, "images")
 
 DIRS = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
-
 @timer(return_time=True)
 def preprocess_input(input_data):
     # Preprocess the input data (if needed)
-    _map = {(int(x), int(y)): int(val) if val != "." else -9 for y, row in enumerate(input_data.splitlines()) for x, val in enumerate(row)}
+    _map = {
+        (int(x), int(y)): int(val) if val != "." else -9
+        for y, row in enumerate(input_data.splitlines())
+        for x, val in enumerate(row)
+    }
     start_coords = {c for c, val in _map.items() if val == 0}
     return (_map, start_coords)
+
+def find_trails(day_input):
+    _map = day_input[0]
+    start_coords = day_input[1]
+
+    # queue: (start, from)
+    queue = deque([(c, c) for c in start_coords])
+    trail_counter = defaultdict(list)
+
+    while queue:
+        start, _from = queue.pop()
+
+        if _map[_from] == 9:
+            trail_counter[start].append(_from)
+        else:
+            for dx, dy in DIRS:
+                new_coords = (_from[0] + dx, _from[1] + dy)
+                try:
+                    if _map[new_coords] - _map[_from] == 1:
+                        queue.append((start, new_coords))
+                except KeyError:
+                    pass
+
+    return trail_counter
 
 
 @timer(return_time=True)
 def task1(day_input):
-    _map = day_input[0]
-    start_coords = day_input[1]
-
-    # queue: (start, from, to) to avoid going back to the same point
-    queue = deque([(c, (0, 0), c) for c in start_coords])
-    trail_counter = defaultdict(set)
-    visited = defaultdict(set)
-
-    while queue:
-        start, from_, to = queue.popleft()
-        visited[start].add(to)
-
-        if _map[to] == 9:
-            # found a trail
-            trail_counter[start].add(to)
-            continue
-
-        for dx, dy in DIRS:
-            new_coords = (to[0] + dx, to[1] + dy)
-            if (
-                new_coords == from_
-                or new_coords in visited[start]
-                or new_coords not in _map
-                or not (_map[new_coords] - _map[to] == 1)
-            ):
-                continue
-            queue.append((start, to, new_coords))
-    return sum([len(trail) for trail in trail_counter.values()])
+    return sum([len(set(trail)) for trail in find_trails(day_input).values()])
 
 
 @timer(return_time=True)
 def task2(day_input):
-    _map = day_input[0]
-    start_coords = day_input[1]
-
-    # queue: (start, from, to) to avoid going back to the same point
-    queue = deque([(c, (0, 0), c) for c in start_coords])
-    trail_counter = defaultdict(list)
-    visited = defaultdict(set)
-
-    while queue:
-        start, from_, to = queue.popleft()
-        visited[start].add(to)
-
-        if _map[to] == 9:
-            # found a trail
-            trail_counter[start].append(to)
-            continue
-
-        for dx, dy in DIRS:
-            new_coords = (to[0] + dx, to[1] + dy)
-            if (
-                new_coords == from_
-                or new_coords in visited[start]
-                or new_coords not in _map
-                or not (_map[new_coords] - _map[to] == 1)
-            ):
-                continue
-            queue.append((start, to, new_coords))
-    return sum([len(trail) for trail in trail_counter.values()])
+    return sum([len(trail) for trail in find_trails(day_input).values()])
 
 
 def main(args):
