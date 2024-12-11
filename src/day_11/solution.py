@@ -29,66 +29,30 @@ def preprocess_input(input_data):
     return list(map(int, input_data.split()))
 
 
+def do_blinks(day_input, blinks):
+    counter = Counter(day_input)
+    for _ in range(blinks):
+        for stone, count in counter.copy().items():
+            counter[stone] -= count
+            if stone == 0:
+                counter[1] += count
+            elif (stone_len := int(math.log10(stone)) + 1) % 2 == 0:
+                half = 10 ** (stone_len // 2)
+                counter[stone // half] += count
+                counter[stone % half] += count
+            else:
+                counter[stone * 2024] += count
+    return sum(counter.values())
+
+
 @timer(return_time=True)
 def task1(day_input):
-    return 0
-    blinks = 25
-    differences = []
-
-    for i in tqdm(range(blinks)):
-        did_split = False
-        for j, x in enumerate(day_input):
-            if did_split:
-                did_split = False
-                continue
-            if x == 0:
-                day_input[j] = 1
-            elif len(str(x)) % 2 == 0:
-                str_x = str(x)
-                len_x = len(str_x)
-                half = len_x // 2
-                first_half = str_x[:half]
-                second_half = str_x[half:]
-                day_input[j] = int(first_half)
-                day_input.insert(j + 1, int(second_half))
-                did_split = True
-            else:
-                day_input[j] *= 2024
-
-    print(f"Diff: {differences}")
-
-    return len(day_input)
-
+    return do_blinks(day_input, 25)
 
 
 @timer(return_time=True)
 def task2(day_input):
-    day_input = list(map(str, day_input))
-    blinks = 25
-
-    counter = Counter(day_input)
-    print(f"Day input: {day_input}")
-    print(f"Counter: {counter}")
-
-    for i in tqdm(range(blinks)):
-        print(f"Counter: {counter}")
-        print("\n-------------------\n")
-        for stone, count in counter.copy().items():
-            if int(stone) == 0:
-                counter.pop(stone)
-                counter["1"] += count
-            elif len(stone) % 2 == 0:
-                half = len(stone) // 2
-                first_half = stone[:half]
-                second_half = str(int(stone[half:]))
-                counter.pop(stone)
-                counter[first_half] += count
-                counter[second_half] += count
-            else:
-                counter.pop(stone)
-                counter[str(int(stone) * 2024)] += count
-    return sum(counter.values())
-
+    return do_blinks(day_input, 75)
 
 
 def main(args):

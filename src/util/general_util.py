@@ -63,13 +63,30 @@ def write_times_to_readme(day, time_task1, time_task2):
     with open(README_PATH, "r") as file:
         lines = file.readlines()
 
+    # Extract the base URL dynamically
+    base_url = None
+    for line in lines:
+        match = re.search(r"\[1\]\((.+?/day_01/solution\.py)\)", line)
+        if match:
+            base_url = match.group(1).rsplit('/day_01', 1)[0]
+            break
+
+    if base_url is None:
+        print("Error: Could not determine the base URL from the table.")
+        sys.exit(1)
+
+    # Construct the regex pattern to find the correct day
+    day_pattern = re.compile(
+        rf"^\|\s*\[{day}\]\(.*day_{day}/solution\.py\)\s*\|\s*([\d.-]+|-)\s*\|\s*([\d.-]+|-)\s*\|$"
+    )
+
     updated = False
     for i, line in enumerate(lines):
-        # Match the line corresponding to the specific day in the table
-        match = re.match(rf"^\| {day} +\| +([\d.-]+|-) +\| +([\d.-]+|-) +\|$", line)
-        if match:
-            # Replace the old times with the new ones
-            lines[i] = f"| {day}   | {time_task1:.6f}      | {time_task2:.6f}      |\n"
+        if day_pattern.match(line):
+            lines[i] = (
+                f"| [{day}]({base_url}/day_{int(day):02d}/solution.py)   "
+                f"| {time_task1:.6f}      | {time_task2:.6f}      |\n"
+            )
             updated = True
             break
 
