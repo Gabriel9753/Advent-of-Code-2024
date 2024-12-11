@@ -65,19 +65,29 @@ def task1(day_input):
 def task2(day_input):
     day_input = list(map(str, day_input))
     blinks = 25
-    differences = []
-    total_stones = 0
 
-    for i, x in tqdm(enumerate(day_input)):
-        for j in range(blinks):
-            if int(x) == 0:
-                x = "1"
-            elif len(x) % 2 != 0:
-                x = 2024 * int(x)
+    counter = Counter(day_input)
+    print(f"Day input: {day_input}")
+    print(f"Counter: {counter}")
+
+    for i in tqdm(range(blinks)):
+        print(f"Counter: {counter}")
+        print("\n-------------------\n")
+        for stone, count in counter.copy().items():
+            if int(stone) == 0:
+                counter.pop(stone)
+                counter["1"] += count
+            elif len(stone) % 2 == 0:
+                half = len(stone) // 2
+                first_half = stone[:half]
+                second_half = str(int(stone[half:]))
+                counter.pop(stone)
+                counter[first_half] += count
+                counter[second_half] += count
             else:
-                pass
-
-    return len(day_input)
+                counter.pop(stone)
+                counter[str(int(stone) * 2024)] += count
+    return sum(counter.values())
 
 
 
