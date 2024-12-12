@@ -23,6 +23,7 @@ cur_day = int(cur_day[0]) if len(cur_day) > 0 else datetime.today().day
 images_path = os.path.join(par_dir, "images")
 
 DIRS = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+RIGHT, LEFT, UP, DOWN = 0, 1, 2, 3
 
 @timer(return_time=True)
 def preprocess_input(input_data):
@@ -32,12 +33,10 @@ def preprocess_input(input_data):
     return {(x, y): z for y, row in enumerate(input_data.strip().splitlines()) for x, z in enumerate(row)}
 
 
-@timer(return_time=True)
-def task1(day_input):
+def analyze_areas(day_input):
     visited = set()
     plant_areas = []
-    plant_perimeters = []
-
+    plant_edges = []
     queue = deque([[x, y, day_input[(x, y)]] for x, y in day_input])
 
     while queue:
@@ -48,90 +47,116 @@ def task1(day_input):
 
         plant_queue = deque([(x, y)])
         plant_area = [(x, y, plant)]
-        plant_perimeter = 0
+        edges = set()
 
         while plant_queue:
             x, y = plant_queue.popleft()
 
             for dx, dy in DIRS:
                 new_x, new_y = x + dx, y + dy
-                if (new_x, new_y) in day_input and day_input[(new_x, new_y)] == plant and (new_x, new_y, plant) not in visited:
+                if (
+                    (new_x, new_y) in day_input
+                    and day_input[(new_x, new_y)] == plant
+                    and (new_x, new_y, plant) not in visited
+                ):
                     plant_queue.append((new_x, new_y))
                     visited.add((new_x, new_y, plant))
                     plant_area.append((new_x, new_y, plant))
                     continue
                 if (new_x, new_y) not in day_input or day_input[(new_x, new_y)] != plant:
-                    plant_perimeter += 1
+                    edges.add((new_x, new_y, (dx, dy)))
 
+        plant_edges.append(edges)
         plant_areas.append(plant_area)
-        plant_perimeters.append(plant_perimeter)
+    return plant_areas, plant_edges
 
-    return sum(len(p) * perimeter for p, perimeter in zip(plant_areas, plant_perimeters))
+
+@timer(return_time=True)
+def task1(day_input):
+    plant_areas, plant_edges = analyze_areas(day_input)
+
+    return sum(len(p) * len(set(edges)) for p, edges in zip(plant_areas, plant_edges))
+
+
+def walk_line(day_input, p, line_coord_to_modify, edge_coords, visited, go_horizontal, side, x, y, dx=0, dy=0):
+    i = 0
+    other_side = RIGHT if side == LEFT else LEFT if side == RIGHT else UP if side == DOWN else DOWN
+    while True:
+        i += 1
+        new_x, new_y = x + (i * dx), y + (i * dy)
+
+        if (new_x, new_y) not in edge_coords:
+            break
+
+        # check if other side is the correct plant p or if it is a plant from another area
+        if other_side == RIGHT:
+            if (new_x + 1, new_y) in day_input and day_input[(new_x + 1, new_y)] != p:
+                break
+        elif other_side == LEFT:
+            if (new_x - 1, new_y) in day_input and day_input[(new_x - 1, new_y)] != p:
+                break
+        elif other_side == UP:
+            if (new_x, new_y - 1) in day_input and day_input[(new_x, new_y - 1)] != p:
+                break
+        elif other_side == DOWN:
+            if (new_x, new_y + 1) in day_input and day_input[(new_x, new_y + 1)] != p:
+                break
+
+        visited.add((new_x, new_y, go_horizontal, side))
+        line_coord_to_modify = (new_x, new_y)
+    return line_coord_to_modify, visited
+
 
 @timer(return_time=True)
 def task2(day_input):
-    visited = set()
-    plant_areas = []
-    plant_perimeters = []
-    plant_edges = []
+    plant_areas, plant_edges = analyze_areas(day_input)
+    all_lines = []
 
-    queue = deque([[x, y, day_input[(x, y)]] for x, y in day_input])
+    for plant_area, edges in zip(plant_areas, plant_edges):
+        p = plant_area[0][2]
+        area_lines = []
+        visited = set()
+        # just the coords around the plant area
+        edge_coords = set((x, y) for x, y, _ in edges)
 
-    while queue:
-        x, y, plant = queue.popleft()
-        if (x, y, plant) in visited:
-            continue
-        visited.add((x, y, plant))
+        # check every edge coord with the respective side from where it came
+        for x, y, (dx, dy) in edges:
+            # Side is important to know because there can be two "same" lines but with different sides (H in example)
+            # XXOOXX
+            # OOHHOO
+            # XXOOXX
+            side = RIGHT if dx == 1 else LEFT if dx == -1 else UP if dy == -1 else DOWN
+            go_horizontal = (side == UP) or (side == DOWN)
 
-        plant_queue = deque([(x, y)])
-        plant_area = [(x, y, plant)]
-        plant_perimeter = 0
-
-        while plant_queue:
-            x, y = plant_queue.popleft()
-
-            for dx, dy in DIRS:
-                new_x, new_y = x + dx, y + dy
-                if (new_x, new_y) in day_input and day_input[(new_x, new_y)] == plant and (new_x, new_y, plant) not in visited:
-                    plant_queue.append((new_x, new_y))
-                    visited.add((new_x, new_y, plant))
-                    plant_area.append((new_x, new_y, plant))
-                    continue
-                if (new_x, new_y) not in day_input or day_input[(new_x, new_y)] != plant:
-                    plant_perimeter += 1
-
-        plant_areas.append(plant_area)
-        plant_perimeters.append(plant_perimeter)
-    # print(plant_areas)
-    # print(plant_edges)
-
-    plant_area_corners = []
-    map_width = max(x for x, _ in day_input)
-    map_height = max(y for _, y in day_input)
-
-    map_corners = [(0, 0), (map_width, 0), (0, map_height), (map_width, map_height)]
-
-    for plant_area in plant_areas:
-        corners = []
-        for plant in plant_area:
-            x, y, p = plant
-            same_plant_ctr = 0
-            for dx, dy in DIRS:
-                new_x, new_y = x + dx, y + dy
-                new_p = day_input.get((new_x, new_y), None)
-                if new_p == p:
-                    same_plant_ctr += 1
-            if same_plant_ctr < 3:
-                corners.append((x,y))
+            # Line was already calculated before because we visited this coord from this side already
+            if (x, y, go_horizontal, side) in visited:
                 continue
+            # If now, then we need to calculate the line in the direction of the side
+            visited.add((x, y, go_horizontal, side))
 
-            # if x,y are the corners of the map, also add as corner
-            if (x, y) in map_corners:
-                corners.append((x,y))
+            # mark line start and end
+            line_start = (x, y)
+            line_end = (x, y)
 
-        plant_area_corners.append(corners)
+            # check if we need to go left and right or up and down
+            if go_horizontal:
+                # first go left till we reach a coord that is not in the edge_coords
+                # it could be a plant from this area or a field with the distance of 2 to the plant area
 
-    print(plant_area_corners)
+                # go left
+                line_start, visited = walk_line(day_input, p, line_start, edge_coords, visited, go_horizontal, side, x, y, dx=-1)
+                # go right
+                line_end, visited = walk_line(day_input, p, line_end, edge_coords, visited, go_horizontal, side, x, y, dx=1)
+            else:
+                # go up
+                line_start, visited = walk_line(day_input, p, line_start, edge_coords, visited, go_horizontal, side, x, y, dy=-1)
+                # go down
+                line_end, visited = walk_line(day_input, p, line_end, edge_coords, visited, go_horizontal, side, x, y, dy=1)
+
+            area_lines.append((line_start, line_end))
+
+        all_lines.append(area_lines)
+    return sum(len(p) * len(lines) for p, lines in zip(plant_areas, all_lines))
 
 
 def main(args):
