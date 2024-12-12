@@ -22,6 +22,7 @@ cur_day = re.findall(r"\d+", last_dir)
 cur_day = int(cur_day[0]) if len(cur_day) > 0 else datetime.today().day
 images_path = os.path.join(par_dir, "images")
 
+DIRS = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
 @timer(return_time=True)
 def preprocess_input(input_data):
@@ -33,14 +34,104 @@ def preprocess_input(input_data):
 
 @timer(return_time=True)
 def task1(day_input):
-    print(day_input)
-    # gehe über alle Koordinaten, die bisher noch nicht besucht werden.
-    # Für jede Koordinate, "beobachte" die Ausbreitung der Pflanzen, solange sich die Pflanzenart nicht ändert
+    visited = set()
+    plant_areas = []
+    plant_perimeters = []
+
+    queue = deque([[x, y, day_input[(x, y)]] for x, y in day_input])
+
+    while queue:
+        x, y, plant = queue.popleft()
+        if (x, y, plant) in visited:
+            continue
+        visited.add((x, y, plant))
+
+        plant_queue = deque([(x, y)])
+        plant_area = [(x, y, plant)]
+        plant_perimeter = 0
+
+        while plant_queue:
+            x, y = plant_queue.popleft()
+
+            for dx, dy in DIRS:
+                new_x, new_y = x + dx, y + dy
+                if (new_x, new_y) in day_input and day_input[(new_x, new_y)] == plant and (new_x, new_y, plant) not in visited:
+                    plant_queue.append((new_x, new_y))
+                    visited.add((new_x, new_y, plant))
+                    plant_area.append((new_x, new_y, plant))
+                    continue
+                if (new_x, new_y) not in day_input or day_input[(new_x, new_y)] != plant:
+                    plant_perimeter += 1
+
+        plant_areas.append(plant_area)
+        plant_perimeters.append(plant_perimeter)
+
+    return sum(len(p) * perimeter for p, perimeter in zip(plant_areas, plant_perimeters))
 
 @timer(return_time=True)
 def task2(day_input):
-    # Day-specific code for Task 2
-    pass
+    visited = set()
+    plant_areas = []
+    plant_perimeters = []
+    plant_edges = []
+
+    queue = deque([[x, y, day_input[(x, y)]] for x, y in day_input])
+
+    while queue:
+        x, y, plant = queue.popleft()
+        if (x, y, plant) in visited:
+            continue
+        visited.add((x, y, plant))
+
+        plant_queue = deque([(x, y)])
+        plant_area = [(x, y, plant)]
+        plant_perimeter = 0
+
+        while plant_queue:
+            x, y = plant_queue.popleft()
+
+            for dx, dy in DIRS:
+                new_x, new_y = x + dx, y + dy
+                if (new_x, new_y) in day_input and day_input[(new_x, new_y)] == plant and (new_x, new_y, plant) not in visited:
+                    plant_queue.append((new_x, new_y))
+                    visited.add((new_x, new_y, plant))
+                    plant_area.append((new_x, new_y, plant))
+                    continue
+                if (new_x, new_y) not in day_input or day_input[(new_x, new_y)] != plant:
+                    plant_perimeter += 1
+
+        plant_areas.append(plant_area)
+        plant_perimeters.append(plant_perimeter)
+    # print(plant_areas)
+    # print(plant_edges)
+
+    plant_area_corners = []
+    map_width = max(x for x, _ in day_input)
+    map_height = max(y for _, y in day_input)
+
+    map_corners = [(0, 0), (map_width, 0), (0, map_height), (map_width, map_height)]
+
+    for plant_area in plant_areas:
+        corners = []
+        for plant in plant_area:
+            x, y, p = plant
+            same_plant_ctr = 0
+            for dx, dy in DIRS:
+                new_x, new_y = x + dx, y + dy
+                new_p = day_input.get((new_x, new_y), None)
+                if new_p == p:
+                    same_plant_ctr += 1
+            if same_plant_ctr < 3:
+                corners.append((x,y))
+                continue
+
+            # if x,y are the corners of the map, also add as corner
+            if (x, y) in map_corners:
+                corners.append((x,y))
+
+        plant_area_corners.append(corners)
+
+    print(plant_area_corners)
 
 
 def main(args):
