@@ -10,6 +10,7 @@ import argparse
 
 import numpy as np
 from tqdm import tqdm
+from rich import print
 
 cur_dir = os.path.dirname(os.path.abspath(__file__))
 par_dir = os.path.dirname(cur_dir)
