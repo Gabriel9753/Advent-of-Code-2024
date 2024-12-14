@@ -23,38 +23,33 @@ last_dir = str(os.path.basename(os.path.normpath(cur_dir)))
 cur_day = re.findall(r"\d+", last_dir)
 cur_day = int(cur_day[0]) if len(cur_day) > 0 else datetime.today().day
 images_path = os.path.join(par_dir, "images")
-day_img_dir = os.path.join(images_path, f"viz_{cur_day}")
-if not os.path.isdir(day_img_dir):
-    os.makedirs(day_img_dir)
-else:
-    for file in os.listdir(day_img_dir):
-        os.remove(os.path.join(day_img_dir, file))
+# day_img_dir = os.path.join(images_path, f"viz_{cur_day}")
+# if not os.path.isdir(day_img_dir):
+#     os.makedirs(day_img_dir)
+# else:
+#     for file in os.listdir(day_img_dir):
+#         os.remove(os.path.join(day_img_dir, file))
 
 # MAP_WIDTH = 11
 MAP_WIDTH = 101
 # MAP_HEIGHT = 7
 MAP_HEIGHT = 103
-TIME_STEPS = 100
+
+DIRS = [(0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (-1, 1), (1, -1), (-1, -1)]
 
 
 @timer(return_time=True)
 def preprocess_input(input_data):
-    # Preprocess the input data (if needed)
     return [list(map(int, re.findall(r"\-?\d+", x))) for x in input_data.splitlines()]
 
 
-def new_pos(x, y, dx, dy):
-    nx = (x + (TIME_STEPS * dx)) % MAP_WIDTH
-    ny = (y + (TIME_STEPS * dy))
-    ny = ny % MAP_HEIGHT if ny >= 0 else (MAP_HEIGHT + ny) % MAP_HEIGHT if ny != 0 else 0
-    # print(f"From ({x}, {y}) with ({dx}, {dy}) to ({nx}, {ny})")
-    return (nx, ny)
-
+def new_pos(x, y, dx, dy, t):
+    return ((x + (t * dx)) % MAP_WIDTH, (y + (t * dy)) % MAP_HEIGHT)
 
 
 @timer(return_time=True)
 def task1(day_input):
-    processed = [new_pos(x, y, dx, dy) for x, y, dx, dy in day_input]
+    processed = [new_pos(x, y, dx, dy, 100) for x, y, dx, dy in day_input]
     # count all robots in each quadrant:
     q1 = q2 = q3 = q4 = 0
     mid_x, mid_y = MAP_WIDTH // 2, MAP_HEIGHT // 2
@@ -72,38 +67,42 @@ def task1(day_input):
     return q1 * q2 * q3 * q4
 
 
-def render(coords, colors):
-    # if TIME_STEPS % 6888 != 0:
-    #     return
-    np_img = np.zeros((MAP_HEIGHT, MAP_WIDTH, 3), dtype=np.uint8)
-    for i, (x, y) in enumerate(coords):
-        np_img[y, x] = [*colors[i]]
-    np_img = np.repeat(np_img, 8, axis=0)
-    np_img = np.repeat(np_img, 8, axis=1)
+###################################
+#### Old solution for rendering ###
+###################################
+# def render(coords, colors, t):
+#     if t % 6888 != 0 or t == 0:
+#         return
+#     np_img = np.zeros((MAP_HEIGHT, MAP_WIDTH, 3), dtype=np.uint8)
+#     for i, (x, y) in enumerate(coords):
+#         np_img[y, x] = [*colors[i]]
+#     np_img = np.repeat(np_img, 8, axis=0)
+#     np_img = np.repeat(np_img, 8, axis=1)
 
-    img = Image.fromarray(np_img)
-    img.save(os.path.join(day_img_dir, f"viz_{TIME_STEPS:05d}.png"), "PNG")
+#     img = Image.fromarray(np_img)
+#     img.save(os.path.join(day_img_dir, f"viz_{t:05d}.png"), "PNG")
 
 
 @timer(return_time=True)
 def task2(day_input):
-    global TIME_STEPS
+    # global TIME_STEPS
+    robots_with_max_neighbors = []
+    # robot_colors = np.random.randint(0, 255, (len(day_input), 3))
+    max_time = 7_000  # set higher if not known
 
-    # assign a random color to every robot
-    robot_colors = [np.random.randint(10, 256, 3) for _ in day_input]
+    for t in range(max_time):
+        ###################################
+        #### Old solution for rendering ###
+        ###################################
+        # pos_to_render = [new_pos(x, y, dx, dy) for x, y, dx, dy in day_input]
+        # render(pos_to_render, robot_colors)
 
-    for t in tqdm(range(6889)):
-        TIME_STEPS = t
-        pos_to_render = [new_pos(x, y, dx, dy) for x, y, dx, dy in day_input]
-        render(pos_to_render, robot_colors)
+        robots = {new_pos(x, y, dx, dy, t) for x, y, dx, dy in day_input}
+        max_neighbors = sum(all((r[0] + dx, r[1] + dy) in robots for dx, dy in DIRS) for r in robots)
+        robots_with_max_neighbors.append((t, max_neighbors))
 
-    # create a timelapse of all images
-    video_out = os.path.join(images_path, "timelapse_day14.mp4")
-
-    all_images = sorted(...)
-
-    return 6888
-
+    max_time, max_neighbors = max(robots_with_max_neighbors, key=lambda x: x[1])
+    return max_time
 
 
 def main(args):
