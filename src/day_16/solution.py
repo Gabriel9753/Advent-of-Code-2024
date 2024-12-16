@@ -51,12 +51,16 @@ def tasks(day_input):
         if pos == end:
             if cost < cur_lowest_cost:
                 cur_lowest_cost = cost
+                # if we find a new lowest cost, reset all current best paths because they are not the best anymore
                 best_paths = [path]
             elif cost == cur_lowest_cost:
+                # found a path with the same cost as the current lowest cost, so add it to the best paths
                 best_paths.append(path)
             continue
 
-        if visited[(pos, direction)] < cost:
+        # for task 2, we have to revisit the same position with the same direction if costs are same => slow
+        # for task 1, we could skip this by changing < to <=, because we only want to find THE lowest cost
+        if (pos, direction) in visited and visited[(pos, direction)] < cost:
             continue
         visited[(pos, direction)] = cost
 
