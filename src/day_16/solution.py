@@ -24,16 +24,8 @@ cur_day = re.findall(r"\d+", last_dir)
 cur_day = int(cur_day[0]) if len(cur_day) > 0 else datetime.today().day
 images_path = os.path.join(par_dir, "images")
 
-# set recursion limit to maximum
-sys.setrecursionlimit(10 ** 6)
-
-DIRS = {
-    "N": (0, -1),
-    "S": (0, 1),
-    "E": (1, 0),
-    "W": (-1, 0),
-}
-ROTATION_COST = 1000
+DIRS = {"N": (0, -1), "S": (0, 1), "E": (1, 0), "W": (-1, 0),}
+RC = 1000
 
 
 @timer(return_time=True)
@@ -46,7 +38,7 @@ def preprocess_input(input_data):
 
 
 @timer(return_time=True)
-def task1(day_input):
+def tasks(day_input):
     maze_map, start, end = day_input
     cur_lowest_cost = math.inf
     queue = deque([(start, DIRS["E"], 0, [start])])
@@ -71,16 +63,17 @@ def task1(day_input):
         for new_dir in DIRS.values():
             if direction == (-new_dir[0], -new_dir[1]):
                 continue
-            new_costs = cost + ROTATION_COST if new_dir != direction else cost + 1
-            if new_costs > cur_lowest_cost:
+
+            new_cost = cost + RC if direction != new_dir else cost + 1
+            if new_cost > cur_lowest_cost:
                 continue
 
             if new_dir != direction:
-                queue.append((pos, new_dir, new_costs, path))
+                queue.append((pos, new_dir, new_cost, path))
             else:
-                new_pos = tuple(map(sum, zip(pos, new_dir)))
+                new_pos = (pos[0] + new_dir[0], pos[1] + new_dir[1])
                 if new_pos in maze_map and maze_map[new_pos] != "#":
-                    queue.append((new_pos, new_dir, new_costs, path + [new_pos]))
+                    queue.append((new_pos, direction, new_cost, path + [new_pos]))
 
     return cur_lowest_cost, len(set([pos for path in best_paths for pos in path]))
 
@@ -93,20 +86,20 @@ def main(args):
         day_input = load_input(os.path.join(cur_dir, "input.txt"))
 
     day_input, t = preprocess_input(day_input)
-    (result_task1, result_task2), time_task1 = task1(day_input)
+    (result_task1, result_task2), time_tasks = tasks(day_input)
 
     print(f"\nDay {cur_day}")
     print("------------------")
     print(f"Processing data: {t:.6f} seconds")
-    print(f"Task 1: {result_task1} ({time_task1:.6f} seconds)")
-    print(f"Task 2: {result_task2} ({time_task1:.6f} seconds)")
+    print(f"Task 1: {result_task1} ({time_tasks:.6f} seconds)")
+    print(f"Task 2: {result_task2} ({time_tasks:.6f} seconds)")
 
     if args.timeit:
-        avg_time_task1 = average_time(100, task1, day_input)
+        avg_time_tasks = average_time(10, tasks, day_input)
         print("\nAverage times:")
-        print(f"Task 1: {avg_time_task1:.6f} seconds")
-        print(f"Task 2: {avg_time_task1:.6f} seconds")
-        write_times_to_readme(cur_day, avg_time_task1, avg_time_task1)
+        print(f"Task 1: {avg_time_tasks:.6f} seconds")
+        print(f"Task 2: {avg_time_tasks:.6f} seconds")
+        write_times_to_readme(cur_day, avg_time_tasks, avg_time_tasks)
 
 
 if __name__ == "__main__":
