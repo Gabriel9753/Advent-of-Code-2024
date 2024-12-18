@@ -23,39 +23,27 @@ images_path = os.path.join(par_dir, "images")
 WIDTH, HEIGHT = 71, 71
 T = 12
 
+
 @timer(return_time=True)
 def preprocess_input(input_data):
     return [list(map(int, re.findall(r"\d+", line))) for line in input_data.splitlines()]
 
+
 def get_mem_space():
     _map = {(x, y): "." for x in range(WIDTH) for y in range(HEIGHT)}
     _map[(0, 0)] = "S"
-    _map[(WIDTH-1, HEIGHT-1)] = "E"
+    _map[(WIDTH - 1, HEIGHT - 1)] = "E"
     return _map
 
+
 def get_neighbours(x, y):
-    return [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]
+    return [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
 
 
-class CustomCache:
-    def __init__(self, num_args):
-        self.num_args = num_args
-        self.cache = {}
-
-    def __call__(self, func):
-        def wrapper(*args):
-            relevant_args = args[:self.num_args]
-            if relevant_args not in self.cache:
-                self.cache[relevant_args] = func(*args)
-            return self.cache[relevant_args]
-        return wrapper
-
-@CustomCache(num_args=1)
 def get_map_t(t, mem_space, _bytes):
     for idx, (x, y) in zip(range(t), _bytes):
         mem_space[(x, y)] = "#"
     return mem_space
-
 
 
 def get_path(mem_space_t):
@@ -81,10 +69,9 @@ def get_path(mem_space_t):
 
         for nx, ny in get_neighbours(x, y):
             if (nx, ny) in mem_space_t and mem_space_t[(nx, ny)] != "#":
-                queue.append((nx, ny, t+1, path + [(nx, ny)]))
+                queue.append((nx, ny, t + 1, path + [(nx, ny)]))
 
     return shortest, set(shortest_path)
-
 
 
 @timer(return_time=True)
@@ -100,20 +87,19 @@ def task2(day_input):
     t = 0
     last_added = None
     while True:
-        mem_space_t = get_map_t(t+1, get_mem_space(), _bytes)
+        mem_space_t = get_map_t(t + 1, get_mem_space(), _bytes)
         shortest, path = get_path(mem_space_t)
         if shortest == math.inf:
             break
 
         # go through the bytes and pick the time_step with a byte coordinate that is in the path
-        for new_t, (x, y) in enumerate(_bytes[t+1:], start=t+1):
+        for new_t, (x, y) in enumerate(_bytes[t + 1 :], start=t + 1):
             if (x, y) in path:
                 t = new_t
                 last_added = (x, y)
                 break
 
     return f"{last_added[0]},{last_added[1]}"
-
 
 
 def main(args):
